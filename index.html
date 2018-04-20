@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Where's The Food</title>
+  <!--
+    This project aims to improve the convenience of searching for restaurants
+    based on several parameters specified by users. Parameters that we take into
+    account are listed below:
+
+    operationTime: Operation time of the restaurants that user expect.
+
+    distance: Search for the restaurants within the distance based on user's
+              current position.
+
+    restaurantStyle: Restaurant style that user expect.
+
+    price: Price range for a meal that user expect.
+  -->
+
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+</head>
+
+<body>
+  <h1>Where's The Food</h1>
+
+  <div id="map"></div>
+
+  <i class="btn-go material-icons">search</i>
+
+  <script type="text/javascript" src="js/map.js"></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAVsffuGECQBSJPxfl8CWTiwZENjLABueU&callback=main">
+  </script>
+</body>
+</html>

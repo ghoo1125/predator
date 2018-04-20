@@ -1,0 +1,37 @@
+h1 {
+  text-align: center;
+}
+
+#map {
+  height: 400px;
+  width: 50%;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+}
+
+.btn-go {
+	height: 80px;
+	width: 80px;
+	cursor: pointer;
+  line-height: 1.3 !important;
+	background-color: #f1f1f1;
+	text-align: center;
+	font-size: 60px !important;
+	color: #444;
+	transition: 0.1s ease-out;
+	border: 1px solid #777;
+	border-top-color: #999;
+	border-bottom: 4px solid #555;
+	border-radius: 50px;
+	user-select: none;
+  outline: none;
+  display: block !important;
+  margin: 10px auto;
+}
+
+.btn-go:active {
+	margin-top: 15px;
+	color: #777;
+	border: 1px solid #999;
+	box-shadow: inset 0 0 5px 0 #333;
+}
