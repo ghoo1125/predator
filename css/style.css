@@ -9,7 +9,7 @@ h1 {
   border: 1px solid #ddd;
 }
 
-.btn-go {
+#btn-go {
 	height: 80px;
 	width: 80px;
 	cursor: pointer;
@@ -29,7 +29,7 @@ h1 {
   margin: 10px auto;
 }
 
-.btn-go:active {
+#btn-go:active {
 	margin-top: 15px;
 	color: #777;
 	border: 1px solid #999;
