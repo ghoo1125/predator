@@ -1,10 +1,43 @@
+body, html {
+  padding: 0;
+  margin: 0;
+}
+
 h1 {
+  font-size: 36pt;
   text-align: center;
+}
+
+.left {
+  height: 100vh;
+  width: 25%;
+  float: left;
+}
+
+.mid {
+  width: 50%;
+  float: left;
+}
+
+.right {
+  height: 100vh;
+  width: 25%;
+  float: left;
+}
+
+.dropdown {
+  position: relative;
+  top: 25%;
+  display: block;
+  width: 50%;
+  height: 10%;
+  margin: 20px auto;
+  font-size: 16pt;
 }
 
 #map {
   height: 400px;
-  width: 50%;
+  width: 90%;
   margin: 0 auto;
   border: 1px solid #ddd;
 }
