@@ -17,7 +17,7 @@ const showResultOptions = {
   LISTALL: 1,
 }
 
-function initMap(curPos) {
+function initMap() {
   let pos = {lat: 25.03, lng: 121.30};
 
   let map = new google.maps.Map(document.getElementById('map'), {
@@ -28,9 +28,20 @@ function initMap(curPos) {
   return map
 }
 
-function createMarker(map, infoWindow, pos, name) {
+function clearMap(markers, directionsDisplay) {
+  if (markers.length > 0) {
+    for (let i = 0; i < markers.length; i++) {
+      markers[i].setMap(null);
+    }
+    markers = [];
+  }
+  directionsDisplay.setMap(null);
+}
+
+function createMarker(map, infoWindow, pos, name, icon = '') {
   let marker = new google.maps.Marker({
     map: map,
+    icon: icon,
     position: pos,
   });
 
@@ -42,19 +53,23 @@ function createMarker(map, infoWindow, pos, name) {
   return marker;
 }
 
-function createPath(map, infoWindow, places) {
-  let markers = [];
-  for (let i = 0; i < places.length; i++) {
-    markers.push(createMarker(
-      map, infoWindow, places[i].geometry.location, places[i].name));
-  }
-
-  return markers;
+function createRoute(map, directionsService, directionsDisplay, origin, destination) {
+  directionsDisplay.setMap(map);
+  directionsService.route({
+    origin: origin,
+    destination: destination,
+    travelMode: 'DRIVING'
+  }, function(response, status) {
+    if (status === google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    } else {
+      alert('Create route failed: ' + status);
+    }
+  });
 }
 
-function searchRestaurant(map, infoWindow, pos, option) {
+function searchRestaurant(map, infoWindow, placesService, pos, option) {
   let allPlaces = []; // maximum 60...
-  let service = new google.maps.places.PlacesService(map);
 
   let request = {
     location: pos,
@@ -62,74 +77,106 @@ function searchRestaurant(map, infoWindow, pos, option) {
     types: ['restaurant'],
   };
   return new Promise((resolve, reject) => {
-    service.nearbySearch(request, (places, status, pagination) => {
-      if (status == google.maps.places.PlacesServiceStatus.OK) {
+    placesService.nearbySearch(request, (places, status, pagination) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
         // FIXME long delay if search all 60 restaurants
         allPlaces = allPlaces.concat(places);
         if (pagination.hasNextPage) {
           pagination.nextPage();
         } else {
-          resolve(createPath(map, infoWindow, allPlaces));
+          resolve(allPlaces);
         }
       } else {
-        console.log('search nearby restaurants error: ' + status);
+        alert('Search nearby restaurants failed: ' + status);
       }
     });
   });
 }
 
+function showRestaurantsDetails(places, placesService) {
+  let request = {
+    placeId: places[0].place_id,
+  };
+
+  placesService.getDetails(request, function (details, status) {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      console.log(details);
+    } else {
+      alert('Get restaurant details failed: ' + status);
+    }
+  });
+}
+
 function main() {
-  let btn = document.getElementById('btn-go');
   let map = initMap();
-  let infoWindow = new google.maps.InfoWindow({map: map});
-  let pos;
+  let userPos;
   let markers = [];
+  let infoWindow = new google.maps.InfoWindow({map: map});
+  let placesService = new google.maps.places.PlacesService(map);
+  let directionsService = new google.maps.DirectionsService;
+  let directionsDisplay = new google.maps.DirectionsRenderer({
+    suppressMarkers: true,
+  });
 
-  // Set to current position and register btn event
+  // Set to current position and register button event
   if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(curPos) {
-        pos = {lat: curPos.coords.latitude, lng: curPos.coords.longitude};
-        map.setCenter(pos);
-        map.setZoom(15);
-        createMarker(map, infoWindow, pos, '你的位置');
-      });
+    navigator.geolocation.getCurrentPosition(function(curPos) {
+      userPos = {lat: curPos.coords.latitude, lng: curPos.coords.longitude};
+      map.setCenter(userPos);
+      map.setZoom(15);
+      let icon = './img/person.png'
+      createMarker(map, infoWindow, userPos, '你的位置', icon);
+    });
 
-      btn.addEventListener('click', function() {
-        let distance = document.getElementById("distance");
-        if (distance.value == distanceOptions.NONE) {
-          alert("Please choose a distance.")
-          return;
-        }
-        // Few restaurants are ranked
+    let btn = document.getElementById('btn-go');
+    btn.addEventListener('click', function() {
+      let distance = document.getElementById("distance");
+      if (distance.value === distanceOptions.NONE) {
+        alert("Please choose a distance.")
+        return;
+      }
 /*
-        let price = document.getElementById("price");
-        if (price.value == priceOptions.NONE) {
-          alert("Please choose a price.")
-          return;
-        }
+      // Few restaurants are ranked
+      let price = document.getElementById("price");
+      if (price.value === priceOptions.NONE) {
+        alert("Please choose a price.")
+        return;
+      }
 */
-        let showResult = document.getElementById("show-result");
-        if (showResult.value == showResultOptions.NONE) {
-          alert("Please choose a show result method.")
-          return;
-        }
+      let showResult = document.getElementById("show-result");
+      showResult = parseInt(showResult.value);
+      if (showResult === showResultOptions.NONE) {
+        alert("Please choose a show result method.")
+        return;
+      }
 
-        if (markers.length > 0) {
-          for (let i = 0; i < markers.length; i++) {
-            markers[i].setMap(null);
+      // clear map
+      clearMap(markers, directionsDisplay);
+
+      let option = {
+        radius: distance.value,
+        price: price.value,
+      };
+      let promise = searchRestaurant(map, infoWindow, placesService, userPos, option);
+      promise.then((places) => {
+        switch (showResult) {
+          case showResultOptions.RANDOM: {
+            let random = Math.floor((Math.random() * places.length));;
+            markers.push(createMarker(map, infoWindow,
+                         places[random].geometry.location, places[random].name));
+            createRoute(map, directionsService, directionsDisplay, userPos,
+                        places[random].geometry.location);
+            showRestaurantsDetails(new Array(places[random]), placesService);
+            break;
           }
-          markers = [];
+          case showResultOptions.LISTALL: {
+            break;
+          }
+          default:
+            alert("Should not reach default case.");
+            break;
         }
-
-        let option = {
-          radius: distance.value,
-          price: price.value,
-          showResult: showResult.value,
-        };
-        let promise = searchRestaurant(map, infoWindow, pos, option);
-        promise.then((value) => {
-          markers = value;
-        });
       });
+    });
   }
 }
