@@ -87,9 +87,8 @@ ul {
 }
 
 .rest-img {
-  display: block;
   margin: 0 auto;
-  width: 80%;
+  width: 100%;
   max-height: 200px;
 }
 
@@ -116,10 +115,42 @@ ul {
   }
 }
 
-.dropbtn:after {
+.drop-btn:after {
   content: '\2304';
 }
 
-.dropdown:hover .dropbtn:after{
+.dropdown:hover .drop-btn:after{
 	content: '\02C4';
+}
+
+.slide-btn>button {
+  color: #aaa;
+  background-color: Transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 80px 0 0 35%;
+  user-select: none;
+  font-size: 16pt;
+}
+
+.slide-img {
+  display: none;
+}
+
+.row {
+  overflow: auto;
+}
+
+.col {
+  float: left;
+}
+
+.col.s1 {
+  width: 10%;
+}
+
+.col.s2 {
+  width: 80%;
 }

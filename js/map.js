@@ -17,6 +17,30 @@ const showResultOptions = {
   LISTALL: 1,
 }
 
+// FIXME store slide idx as global variable
+let slideIndex = 1;
+
+function plusDivs(n) {
+  showDivs(slideIndex += n);
+}
+
+function showDivs(n) {
+  let i;
+  let imgs = document.getElementsByClassName("slide-img");
+  if (n > imgs.length) {
+    slideIndex = 1;
+  }
+
+  if (n < 1) {
+    slideIndex = imgs.length;
+  }
+
+  for (i = 0; i < imgs.length; i++) {
+     imgs[i].style.display = "none";
+  }
+  imgs[slideIndex - 1].style.display = "block";
+}
+
 function initMap() {
   let pos = {lat: 25.03, lng: 121.30};
 
@@ -107,13 +131,62 @@ function createRestaurantBlock(details) {
   restName.innerHTML = details.name;
   rest.appendChild(restName);
 
-  let restImg = document.createElement('img');
-  restImg.className = 'rest-img';
-  restImg.src = details.photos[0].getUrl({
-    maxHeight: details.photos[0].height,
-    maxWidth: details.photos[0].width,
+  let row = document.createElement('div');
+  row.className = 'row';
+  rest.appendChild(row);
+
+  let slideButton = document.createElement('div');
+  slideButton.className = 'slide-btn col s1';
+  row.appendChild(slideButton);
+
+  let leftButton = document.createElement('button');
+  leftButton.addEventListener('click', function () {
+    plusDivs(-1);
   });
-  rest.appendChild(restImg);
+  leftButton.innerHTML = '❮';
+  slideButton.appendChild(leftButton);
+
+  let slideImg;
+  let restImg;
+  if (details.hasOwnProperty('photos')) {
+    for (let i = 0; i < details.photos.length; i++) {
+      slideImg = document.createElement('div');
+      slideImg.className = 'slide-img col s2';
+      if (i == 0) {
+        slideImg.style.display = 'block';
+      }
+      row.appendChild(slideImg);
+
+      restImg = document.createElement('img');
+      restImg.className = 'rest-img';
+      restImg.src = details.photos[i].getUrl({
+        maxHeight: details.photos[i].height,
+        maxWidth: details.photos[i].width,
+      });
+      slideImg.appendChild(restImg);
+    }
+  } else {
+    slideImg = document.createElement('div');
+    slideImg.className = 'slide-img col s2';
+    slideImg.style.display = 'block';
+    row.appendChild(slideImg);
+
+    restImg = document.createElement('img');
+    restImg.className = 'rest-img';
+    restImg.src = './img/coming_soon.jpg';
+    slideImg.appendChild(restImg);
+  }
+
+  slideButton = document.createElement('div');
+  slideButton.className = 'slide-btn col s1';
+  row.appendChild(slideButton);
+
+  let rightButton = document.createElement('button');
+  rightButton.addEventListener('click', function () {
+    plusDivs(1);
+  });
+  rightButton.innerHTML = '❯';
+  slideButton.appendChild(rightButton);
 
   let restInfo = document.createElement('div');
   restInfo.className = 'rest-info';
@@ -155,18 +228,31 @@ function createRestaurantBlock(details) {
   timeIcon.className = 'fa fa-clock-o';
   dropdown.appendChild(timeIcon);
 
-  let dropbtn = document.createElement('span');
-  dropbtn.className = 'dropbtn';
-  dropbtn.innerHTML = details.opening_hours.open_now ? '營業中' : '本日公休';
-  dropdown.appendChild(dropbtn);
+  let dropButton = document.createElement('span');
+  dropButton.className = 'drop-btn';
+  if (details.hasOwnProperty('opening_hours') &&
+      details.opening_hours.hasOwnProperty('open_now')) {
+    dropButton.innerHTML = details.opening_hours.open_now ? '營業中' : '休息中';
+  } else {
+    dropButton.innerHTML = '營業時間';
+  }
+  dropdown.appendChild(dropButton);
 
   let content = document.createElement('ul');
   content.className = 'dropdown-content';
   dropdown.appendChild(content);
 
-  for (let i = 0; i < details.opening_hours.weekday_text.length; i++) {
-    let list = document.createElement('li');
-    list.innerHTML = details.opening_hours.weekday_text[i];
+  let list;
+  if (details.hasOwnProperty('opening_hours') &&
+      details.opening_hours.hasOwnProperty('weekday_text')) {
+    for (let i = 0; i < details.opening_hours.weekday_text.length; i++) {
+      list = document.createElement('li');
+      list.innerHTML = details.opening_hours.weekday_text[i];
+      content.appendChild(list);
+    }
+  } else {
+    list = document.createElement('li');
+    list.innerHTML = "很抱歉，查無資料。";
     content.appendChild(list);
   }
 
