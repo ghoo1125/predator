@@ -28,7 +28,7 @@ function initMap() {
   return map
 }
 
-function clearMap(markers, directionsDisplay) {
+function clearMapAndResults(markers, directionsDisplay) {
   if (markers.length > 0) {
     for (let i = 0; i < markers.length; i++) {
       markers[i].setMap(null);
@@ -36,6 +36,11 @@ function clearMap(markers, directionsDisplay) {
     markers = [];
   }
   directionsDisplay.setMap(null);
+
+  let results = document.getElementById("rest-results");
+  while (results.firstChild) {
+    results.removeChild(results.firstChild);
+  }
 }
 
 function createMarker(map, infoWindow, pos, name, icon = '') {
@@ -60,7 +65,7 @@ function createRoute(map, directionsService, directionsDisplay, origin, destinat
     destination: destination,
     travelMode: 'DRIVING'
   }, function(response, status) {
-    if (status === google.maps.DirectionsStatus.OK) {
+    if (status == google.maps.DirectionsStatus.OK) {
       directionsDisplay.setDirections(response);
     } else {
       alert('Create route failed: ' + status);
@@ -78,7 +83,7 @@ function searchRestaurant(map, infoWindow, placesService, pos, option) {
   };
   return new Promise((resolve, reject) => {
     placesService.nearbySearch(request, (places, status, pagination) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
         // FIXME long delay if search all 60 restaurants
         allPlaces = allPlaces.concat(places);
         if (pagination.hasNextPage) {
@@ -93,14 +98,91 @@ function searchRestaurant(map, infoWindow, placesService, pos, option) {
   });
 }
 
+function createRestaurantBlock(details) {
+  let rest = document.createElement('div');
+  rest.className = 'rest';
+
+  let restName = document.createElement('span');
+  restName.className = 'rest-name';
+  restName.innerHTML = details.name;
+  rest.appendChild(restName);
+
+  let restImg = document.createElement('img');
+  restImg.className = 'rest-img';
+  restImg.src = details.photos[0].getUrl({
+    maxHeight: details.photos[0].height,
+    maxWidth: details.photos[0].width,
+  });
+  rest.appendChild(restImg);
+
+  let restInfo = document.createElement('div');
+  restInfo.className = 'rest-info';
+  rest.appendChild(restInfo);
+
+  let restPhone = document.createElement('div');
+  restPhone.className = 'rest-phone';
+  restInfo.appendChild(restPhone);
+
+  let phoneIcon = document.createElement('i');
+  phoneIcon.className = 'fa fa-phone';
+  restPhone.appendChild(phoneIcon);
+
+  let phoneNum = document.createElement('span');
+  phoneNum.innerHTML = details.international_phone_number;
+  restPhone.appendChild(phoneNum);
+
+  let restAddr = document.createElement('div');
+  restAddr.className = 'rest-addr';
+  restInfo.appendChild(restAddr);
+
+  let addrIcon = document.createElement('i');
+  addrIcon.className = 'fa fa-map-marker';
+  restAddr.appendChild(addrIcon);
+
+  let addrName = document.createElement('span');
+  addrName.innerHTML = details.formatted_address;
+  restAddr.appendChild(addrName);
+
+  let restTime = document.createElement('div');
+  restTime.className = 'rest-time';
+  restInfo.appendChild(restTime);
+
+  let dropdown = document.createElement('div');
+  dropdown.className = 'dropdown';
+  restTime.appendChild(dropdown);
+
+  let timeIcon = document.createElement('i');
+  timeIcon.className = 'fa fa-clock-o';
+  dropdown.appendChild(timeIcon);
+
+  let dropbtn = document.createElement('span');
+  dropbtn.className = 'dropbtn';
+  dropbtn.innerHTML = details.opening_hours.open_now ? '營業中' : '本日公休';
+  dropdown.appendChild(dropbtn);
+
+  let content = document.createElement('ul');
+  content.className = 'dropdown-content';
+  dropdown.appendChild(content);
+
+  for (let i = 0; i < details.opening_hours.weekday_text.length; i++) {
+    let list = document.createElement('li');
+    list.innerHTML = details.opening_hours.weekday_text[i];
+    content.appendChild(list);
+  }
+
+  return rest;
+}
+
 function showRestaurantsDetails(places, placesService) {
   let request = {
     placeId: places[0].place_id,
   };
 
   placesService.getDetails(request, function (details, status) {
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
       console.log(details);
+      let results = document.getElementById('rest-results');
+      results.appendChild(createRestaurantBlock(details));
     } else {
       alert('Get restaurant details failed: ' + status);
     }
@@ -130,28 +212,27 @@ function main() {
 
     let btn = document.getElementById('btn-go');
     btn.addEventListener('click', function() {
-      let distance = document.getElementById("distance");
-      if (distance.value === distanceOptions.NONE) {
-        alert("Please choose a distance.")
+      let distance = document.getElementById('distance');
+      if (distance.value == distanceOptions.NONE) {
+        alert('Please choose a distance.')
         return;
       }
 /*
       // Few restaurants are ranked
-      let price = document.getElementById("price");
-      if (price.value === priceOptions.NONE) {
-        alert("Please choose a price.")
+      let price = document.getElementById('price');
+      if (price.value == priceOptions.NONE) {
+        alert('Please choose a price.')
         return;
       }
 */
-      let showResult = document.getElementById("show-result");
-      showResult = parseInt(showResult.value);
-      if (showResult === showResultOptions.NONE) {
-        alert("Please choose a show result method.")
+      let showResult = document.getElementById('show-result');
+      if (showResult.value == showResultOptions.NONE) {
+        alert('Please choose a show result method.')
         return;
       }
 
       // clear map
-      clearMap(markers, directionsDisplay);
+      clearMapAndResults(markers, directionsDisplay);
 
       let option = {
         radius: distance.value,
@@ -159,6 +240,7 @@ function main() {
       };
       let promise = searchRestaurant(map, infoWindow, placesService, userPos, option);
       promise.then((places) => {
+        showResult = parseInt(showResult.value);
         switch (showResult) {
           case showResultOptions.RANDOM: {
             let random = Math.floor((Math.random() * places.length));;
@@ -173,7 +255,7 @@ function main() {
             break;
           }
           default:
-            alert("Should not reach default case.");
+            alert('Should not reach default case.');
             break;
         }
       });

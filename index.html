@@ -19,12 +19,13 @@
 
   <link rel="stylesheet" type="text/css" href="css/style.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
 <body>
   <div>
     <div class="left">
-      <select id="distance" class="dropdown">
+      <select id="distance" class="option">
         <option value="-1" selected="selected" disabled>距離</option>
         <option value="500">500公尺內</option>
         <option value="1000">1公里內</option>
@@ -32,13 +33,13 @@
         <option value="10000">10公里內</option>
         <option value="50000">50公里內</option>
       </select>
-      <select id="price" class="dropdown" disabled>
+      <select id="price" class="option" disabled>
         <option value="-1" selected="selected" disabled>價位</option>
         <option value="1">平民</option>
         <option value="2">中等</option>
         <option value="3">高檔</option>
       </select>
-      <select id="show-result" class="dropdown">
+      <select id="show-result" class="option">
         <option value="-1" selected="selected" disabled>結果顯示</option>
         <option value="0">隨機選取</option>
         <option value="1">列出所有餐廳</option>
@@ -53,7 +54,39 @@
       <i id="btn-go" class="material-icons">search</i>
     </div>
 
-    <div class="right"></div>
+    <div id="rest-results" class="right">
+<!--
+      <div class="rest">
+        <span class="rest-name">費利榭</span>
+        <img class="rest-img" src="https://maps.googleapis.com/maps/api/place/js/PhotoService.GetPhoto?1sCmRaAAAAJsQlojSPGGkutxCP7TQA0JQTDeL4uLgUN71CwN0GFaZC7ALbaUvFx9dOJ4FxvYfFRi3shCq48MnQNgJEbfJr83XDBw6nohwexKYFuTxpvCjCBa6MWlpYwRWmV7cGC2FgEhD6XPIW7IWbTVPHUuinmWFkGhQ-Akvhw7dajNp2kK8pAVF6WsLFDQ&3u300&4u300&5m1&2e1&key=AIzaSyAVsffuGECQBSJPxfl8CWTiwZENjLABueU&callback=none&token=6830"></img>
+        <div class="rest-info">
+          <div class="rest-phone">
+            <i class="fa fa-phone"></i>
+            <span>02 2758 8123</span>
+          </div>
+          <div class="rest-addr">
+            <i class="fa fa-map-marker"></i>
+            <span>110台灣台北市信義區莊敬路468號</span>
+          </div>
+          <div class="rest-time">
+            <div class="dropdown">
+              <i class="fa fa-clock-o"></i>
+              <span class="dropbtn">營業中 </span>
+              <ul class="dropdown-content">
+                <li>星期一: 10:30 – 20:00</li>
+                <li>星期二: 10:30 – 20:00</li>
+                <li>星期三: 10:30 – 20:00</li>
+                <li>星期四: 10:30 – 20:00</li>
+                <li>星期五: 10:30 – 20:00</li>
+                <li>星期六: 10:30 – 20:00</li>
+                <li>星期日: 休息</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+-->
+    </div>
   </div>
 
   <script type="text/javascript" charset="UTF-8" src="js/map.js"></script>
