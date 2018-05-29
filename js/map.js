@@ -201,7 +201,11 @@ function createRestaurantBlock(details) {
   restPhone.appendChild(phoneIcon);
 
   let phoneNum = document.createElement('span');
-  phoneNum.innerHTML = details.international_phone_number;
+  if (details.hasOwnProperty('international_phone_number')) {
+    phoneNum.innerHTML = details.international_phone_number;
+  } else {
+    phoneNum.innerHTML = '很抱歉，查無聯絡方式。';
+  }
   restPhone.appendChild(phoneNum);
 
   let restAddr = document.createElement('div');
