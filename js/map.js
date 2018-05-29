@@ -268,14 +268,17 @@ function showRestaurantsDetails(places, placesService) {
     placeId: places[0].place_id,
   };
 
-  placesService.getDetails(request, function (details, status) {
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      console.log(details);
-      let results = document.getElementById('rest-results');
-      results.appendChild(createRestaurantBlock(details));
-    } else {
-      alert('Get restaurant details failed: ' + status);
-    }
+  return new Promise((resolve, reject) => {
+    placesService.getDetails(request, function (details, status) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        console.log(details);
+        let results = document.getElementById('rest-results');
+        results.appendChild(createRestaurantBlock(details));
+        resolve();
+      } else {
+        alert('Get restaurant details failed: ' + status);
+      }
+    });
   });
 }
 
@@ -321,6 +324,11 @@ function main() {
         return;
       }
 
+      // change search btn to loading img also make btn not work
+      let loading = document.getElementById('loading');
+      loading.style.display = 'block';
+      btn.style.display = 'none';
+
       // clear map
       clearMapAndResults(markers, directionsDisplay);
 
@@ -328,7 +336,8 @@ function main() {
         radius: distance.value,
         price: price.value,
       };
-      let promise = searchRestaurant(map, infoWindow, placesService, userPos, option);
+      let promise;
+      promise = searchRestaurant(map, infoWindow, placesService, userPos, option);
       promise.then((places) => {
         showResult = parseInt(showResult.value);
         switch (showResult) {
@@ -351,7 +360,7 @@ function main() {
                          places[random].geometry.location, places[random].name));
             createRoute(map, directionsService, directionsDisplay, userPos,
                         places[random].geometry.location);
-            showRestaurantsDetails(new Array(places[random]), placesService);
+            promise = showRestaurantsDetails(new Array(places[random]), placesService);
             break;
           }
           case showResultOptions.LISTALL: {
@@ -361,6 +370,12 @@ function main() {
             alert('Should not reach default case.');
             break;
         }
+
+        promise.then(() => {
+          loading.style.display = 'none';
+          btn.style.display = 'block';
+        });
+
       });
     });
   }

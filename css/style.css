@@ -49,6 +49,7 @@ ul {
 }
 
 #btn-go {
+  display: block;
 	height: 80px;
 	width: 80px;
 	cursor: pointer;
@@ -64,11 +65,24 @@ ul {
 	border-radius: 50px;
 	user-select: none;
   outline: none;
-  display: block !important;
   margin: 10px auto;
 }
 
-#btn-go:active {
+#loading {
+  display: none;
+	height: 80px;
+	width: 80px;
+	cursor: pointer;
+	transition: 0.1s ease-out;
+	border: 1px solid #777;
+	border-top-color: #999;
+	border-bottom: 4px solid #555;
+	border-radius: 50px;
+	user-select: none;
+  margin: 10px auto;
+}
+
+#btn-go:active, #loading:active {
 	margin-top: 15px;
 	color: #777;
 	border: 1px solid #999;
