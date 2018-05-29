@@ -333,7 +333,20 @@ function main() {
         showResult = parseInt(showResult.value);
         switch (showResult) {
           case showResultOptions.RANDOM: {
-            let random = Math.floor((Math.random() * places.length));;
+            let random;
+            while (1) {
+              random = Math.floor((Math.random() * places.length));;
+              if (places[random].hasOwnProperty('opening_hours') &&
+                  places[random].opening_hours.hasOwnProperty('open_now') &&
+                  places[random].opening_hours.open_now) {
+                break;
+              } else if (places.length == 0) {
+                alert('很抱歉，目前找不到適合的餐廳。');
+                return;
+              } else {
+                places.splice(random, 1);
+              }
+            }
             markers.push(createMarker(map, infoWindow,
                          places[random].geometry.location, places[random].name));
             createRoute(map, directionsService, directionsDisplay, userPos,
