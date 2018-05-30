@@ -104,6 +104,7 @@ function searchRestaurant(map, infoWindow, placesService, pos, option) {
     location: pos,
     radius: option.radius, /* maximum 50,000 meter */
     types: ['restaurant'],
+    openNow: option.openNow,
   };
   return new Promise((resolve, reject) => {
     placesService.nearbySearch(request, (places, status, pagination) => {
@@ -324,7 +325,7 @@ function main() {
         return;
       }
 
-      // change search btn to loading img also make btn not work
+      // start loading
       let loading = document.getElementById('loading');
       loading.style.display = 'block';
       btn.style.display = 'none';
@@ -332,51 +333,41 @@ function main() {
       // clear map
       clearMapAndResults(markers, directionsDisplay);
 
-      let option = {
-        radius: distance.value,
-        price: price.value,
-      };
-      let promise;
-      promise = searchRestaurant(map, infoWindow, placesService, userPos, option);
-      promise.then((places) => {
-        showResult = parseInt(showResult.value);
-        switch (showResult) {
-          case showResultOptions.RANDOM: {
-            let random;
-            while (1) {
-              random = Math.floor((Math.random() * places.length));
-              if (places[random].hasOwnProperty('opening_hours') &&
-                  places[random].opening_hours.hasOwnProperty('open_now') &&
-                  places[random].opening_hours.open_now) {
-                break;
-              } else if (places.length == 0) {
-                alert('很抱歉，目前找不到適合的餐廳。');
-                return;
-              } else {
-                places.splice(random, 1);
-              }
-            }
+      // searchRestaurant and show results
+      let option = {};
+      showResult = parseInt(showResult.value);
+      switch (showResult) {
+        case showResultOptions.RANDOM: {
+          option['radius'] = distance.value;
+          option['price'] = price.value;
+          // Don't show closed rest under random mode
+          option['openNow'] = true;
+
+          let searchPromise = searchRestaurant(
+            map, infoWindow, placesService, userPos, option);
+          searchPromise.then((places) => {
+            let random = Math.floor((Math.random() * places.length));
             markers.push(createMarker(map, infoWindow,
                          places[random].geometry.location, places[random].name));
             createRoute(map, directionsService, directionsDisplay, userPos,
                         places[random].geometry.location);
-            promise = showRestaurantsDetails(new Array(places[random]), placesService);
-            break;
-          }
-          case showResultOptions.LISTALL: {
-            break;
-          }
-          default:
-            alert('Should not reach default case.');
-            break;
+            return showRestaurantsDetails(new Array(places[random]), placesService);
+          }).then(function() {
+            // end loading
+            loading.style.display = 'none';
+            btn.style.display = 'block';
+          });
+          break;
         }
-
-        promise.then(() => {
-          loading.style.display = 'none';
-          btn.style.display = 'block';
-        });
-
-      });
-    });
+        case showResultOptions.LISTALL: {
+          break;
+        }
+        default:
+          alert('Should not reach default case.');
+          break;
+      }
+    }); // add btn event listener
+  } else {
+    alert('Sorry, please permit accessibility to your current location.');
   }
 }
