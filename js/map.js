@@ -121,7 +121,7 @@ function searchRestaurant(map, infoWindow, placesService, pos, option) {
   let request = {
     location: pos,
     radius: option.radius, /* maximum 50,000 meter */
-    types: ['restaurant'],
+    type: 'restaurant',
     openNow: option.openNow,
   };
   return new Promise((resolve, reject) => {
