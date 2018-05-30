@@ -67,6 +67,24 @@ function clearMapAndResults(markers, directionsDisplay) {
   }
 }
 
+function startLoading() {
+  // start loading
+  let btn = document.getElementById('btn-go');
+  let loading = document.getElementById('loading');
+
+  btn.style.display = 'none';
+  loading.style.display = 'block';
+}
+
+function endLoading() {
+  // end loading
+  let btn = document.getElementById('btn-go');
+  let loading = document.getElementById('loading');
+
+  btn.style.display = 'block';
+  loading.style.display = 'none';
+}
+
 function createMarker(map, infoWindow, pos, name, icon = '') {
   let marker = new google.maps.Marker({
     map: map,
@@ -257,7 +275,7 @@ function createRestaurantBlock(details) {
     }
   } else {
     list = document.createElement('li');
-    list.innerHTML = '很抱歉，查無資料。';
+    list.innerHTML = '很抱歉，查無營業時間。';
     content.appendChild(list);
   }
 
@@ -325,11 +343,6 @@ function main() {
         return;
       }
 
-      // start loading
-      let loading = document.getElementById('loading');
-      loading.style.display = 'block';
-      btn.style.display = 'none';
-
       // clear map
       clearMapAndResults(markers, directionsDisplay);
 
@@ -338,6 +351,8 @@ function main() {
       showResult = parseInt(showResult.value);
       switch (showResult) {
         case showResultOptions.RANDOM: {
+          startLoading();
+
           option['radius'] = distance.value;
           option['price'] = price.value;
           // Don't show closed rest under random mode
@@ -346,6 +361,11 @@ function main() {
           let searchPromise = searchRestaurant(
             map, infoWindow, placesService, userPos, option);
           searchPromise.then((places) => {
+            if (places.length == 0) {
+              alert('很抱歉，目前找不到適合的餐廳。');
+              return;
+            }
+
             let random = Math.floor((Math.random() * places.length));
             markers.push(createMarker(map, infoWindow,
                          places[random].geometry.location, places[random].name));
@@ -353,9 +373,7 @@ function main() {
                         places[random].geometry.location);
             return showRestaurantsDetails(new Array(places[random]), placesService);
           }).then(function() {
-            // end loading
-            loading.style.display = 'none';
-            btn.style.display = 'block';
+            endLoading();
           });
           break;
         }
