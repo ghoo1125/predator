@@ -351,6 +351,11 @@ function main() {
       showResult = parseInt(showResult.value);
       switch (showResult) {
         case showResultOptions.RANDOM: {
+          if (!userPos) {
+            alert('定位中，請稍後再試。');
+            return;
+          }
+
           startLoading();
 
           option['radius'] = distance.value;
