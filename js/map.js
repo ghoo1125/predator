@@ -26,7 +26,7 @@ function plusDivs(n) {
 
 function showDivs(n) {
   let i;
-  let imgs = document.getElementsByClassName("slide-img");
+  let imgs = document.getElementsByClassName('slide-img');
   if (n > imgs.length) {
     slideIndex = 1;
   }
@@ -36,9 +36,9 @@ function showDivs(n) {
   }
 
   for (i = 0; i < imgs.length; i++) {
-     imgs[i].style.display = "none";
+     imgs[i].style.display = 'none';
   }
-  imgs[slideIndex - 1].style.display = "block";
+  imgs[slideIndex - 1].style.display = 'block';
 }
 
 function initMap() {
@@ -61,7 +61,7 @@ function clearMapAndResults(markers, directionsDisplay) {
   }
   directionsDisplay.setMap(null);
 
-  let results = document.getElementById("rest-results");
+  let results = document.getElementById('rest-results');
   while (results.firstChild) {
     results.removeChild(results.firstChild);
   }
@@ -256,7 +256,7 @@ function createRestaurantBlock(details) {
     }
   } else {
     list = document.createElement('li');
-    list.innerHTML = "很抱歉，查無資料。";
+    list.innerHTML = '很抱歉，查無資料。';
     content.appendChild(list);
   }
 
@@ -344,7 +344,7 @@ function main() {
           case showResultOptions.RANDOM: {
             let random;
             while (1) {
-              random = Math.floor((Math.random() * places.length));;
+              random = Math.floor((Math.random() * places.length));
               if (places[random].hasOwnProperty('opening_hours') &&
                   places[random].opening_hours.hasOwnProperty('open_now') &&
                   places[random].opening_hours.open_now) {
