@@ -294,6 +294,8 @@ function showRestaurantsDetails(places, placesService) {
       if (status == google.maps.places.PlacesServiceStatus.OK) {
         let results = document.getElementById('rest-results');
         results.appendChild(createRestaurantBlock(details));
+        results.appendChild(createRestaurantBlock(details));
+        results.appendChild(createRestaurantBlock(details));
         resolve();
       } else {
         // FIXME Should handle error state
