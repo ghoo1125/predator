@@ -8,15 +8,19 @@ body {
   background-size: cover;
 }
 
-h1 {
-  font-size: 36pt;
-  text-align: center;
-}
-
 ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
+}
+
+.logo {
+  display: block;
+  margin: 20px auto;
+  user-select: none;
+  /* 1229 * 377 */
+  width: 36.87vw;
+  height: 11.31vw;
 }
 
 .left {
@@ -47,8 +51,8 @@ ul {
 }
 
 #map {
-  height: 400px;
-  width: 90%;
+  height: 350px;
+  width: 85%;
   margin: 0 auto;
   border: 1px solid #ddd;
 }
