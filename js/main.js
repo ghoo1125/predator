@@ -11,12 +11,6 @@ const priceOptions = {
   EXPENSIVE: 3,
 }
 
-const showResultOptions = {
-  NONE: -1,
-  RANDOM: 0,
-  LISTALL: 1,
-}
-
 // FIXME store slide idx as global variable
 let slideIndex = 1;
 
@@ -303,6 +297,60 @@ function showRestaurantsDetails(places, placesService) {
   });
 }
 
+function goButtonInit(map, userPos, markers, infoWindow, placesService,
+                      directionsService, directionsDisplay) {
+  let btn = document.getElementById('btn-go');
+  btn.addEventListener('click', function() {
+    let distance = document.getElementById('distance');
+    if (distance.value == distanceOptions.NONE) {
+      alert('Please choose a distance.')
+      return;
+    }
+/*
+    // Few restaurants are ranked
+    let price = document.getElementById('price');
+    if (price.value == priceOptions.NONE) {
+      alert('Please choose a price.')
+      return;
+    }
+*/
+    // clear map
+    clearMapAndResults(markers, directionsDisplay);
+
+    // searchRestaurant and show results
+    if (!userPos) {
+      alert('定位中，請稍後再試。');
+      return;
+    }
+
+    startLoading();
+
+    let option = {
+      'radius': distance.value,
+      'price': price.value,
+      // Don't show closed restaurants
+      'openNow': true
+    };
+    let searchPromise = searchRestaurant(
+      map, infoWindow, placesService, userPos, option);
+    searchPromise.then((places) => {
+      if (places.length == 0) {
+        alert('很抱歉，目前找不到適合的餐廳。');
+        return;
+      }
+
+      let random = Math.floor((Math.random() * places.length));
+      markers.push(createMarker(map, infoWindow,
+                   places[random].geometry.location, places[random].name));
+      createRoute(map, directionsService, directionsDisplay, userPos,
+                  places[random].geometry.location);
+      return showRestaurantsDetails(new Array(places[random]), placesService);
+    }).then(function() {
+      endLoading();
+    });
+  }); // add btn event listener
+}
+
 function main() {
   let map = initMap();
   let userPos;
@@ -322,77 +370,12 @@ function main() {
       map.setZoom(15);
       let icon = './img/person.png'
       createMarker(map, infoWindow, userPos, '你的位置', icon);
+
+      goButtonInit(map, userPos, markers, infoWindow, placesService,
+                   directionsService, directionsDisplay);
+    }, function() {
+      alert('Sorry, please permit accessibility to your current location.');
+      return;
     });
-
-    let btn = document.getElementById('btn-go');
-    btn.addEventListener('click', function() {
-      let distance = document.getElementById('distance');
-      if (distance.value == distanceOptions.NONE) {
-        alert('Please choose a distance.')
-        return;
-      }
-/*
-      // Few restaurants are ranked
-      let price = document.getElementById('price');
-      if (price.value == priceOptions.NONE) {
-        alert('Please choose a price.')
-        return;
-      }
-*/
-      let showResult = document.getElementById('show-result');
-      if (showResult.value == showResultOptions.NONE) {
-        alert('Please choose a show result method.')
-        return;
-      }
-
-      // clear map
-      clearMapAndResults(markers, directionsDisplay);
-
-      // searchRestaurant and show results
-      let option = {};
-      showResult = parseInt(showResult.value);
-      switch (showResult) {
-        case showResultOptions.RANDOM: {
-          if (!userPos) {
-            alert('定位中，請稍後再試。');
-            return;
-          }
-
-          startLoading();
-
-          option['radius'] = distance.value;
-          option['price'] = price.value;
-          // Don't show closed rest under random mode
-          option['openNow'] = true;
-
-          let searchPromise = searchRestaurant(
-            map, infoWindow, placesService, userPos, option);
-          searchPromise.then((places) => {
-            if (places.length == 0) {
-              alert('很抱歉，目前找不到適合的餐廳。');
-              return;
-            }
-
-            let random = Math.floor((Math.random() * places.length));
-            markers.push(createMarker(map, infoWindow,
-                         places[random].geometry.location, places[random].name));
-            createRoute(map, directionsService, directionsDisplay, userPos,
-                        places[random].geometry.location);
-            return showRestaurantsDetails(new Array(places[random]), placesService);
-          }).then(function() {
-            endLoading();
-          });
-          break;
-        }
-        case showResultOptions.LISTALL: {
-          break;
-        }
-        default:
-          alert('Should not reach default case.');
-          break;
-      }
-    }); // add btn event listener
-  } else {
-    alert('Sorry, please permit accessibility to your current location.');
   }
 }
