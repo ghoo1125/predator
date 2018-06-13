@@ -11,28 +11,33 @@ const priceOptions = {
   EXPENSIVE: 3,
 }
 
+// The number of retaurants' results that we show
+const RESULTS_NUM = 3;
+
 // FIXME store slide idx as global variable
-let slideIndex = 1;
+let slideIndex = new Array(RESULTS_NUM);
+(function slideIndexInit() {
+  for (let i = 0; i < slideIndex.length; i++) {
+    slideIndex[i] = 1;
+  }
+}) ();
 
-function plusDivs(n) {
-  showDivs(slideIndex += n);
-}
+function nextPage(isRight, idx) {
+  slideIndex[idx] += isRight ? 1 : -1;
 
-function showDivs(n) {
-  let i;
-  let imgs = document.getElementsByClassName('slide-img');
-  if (n > imgs.length) {
-    slideIndex = 1;
+  let imgs = document.getElementsByClassName('slide-img' + idx);
+  if (slideIndex[idx] > imgs.length) {
+    slideIndex[idx] = 1;
   }
 
-  if (n < 1) {
-    slideIndex = imgs.length;
+  if (slideIndex[idx] < 1) {
+    slideIndex[idx] = imgs.length;
   }
 
-  for (i = 0; i < imgs.length; i++) {
+  for (let i = 0; i < imgs.length; i++) {
      imgs[i].style.display = 'none';
   }
-  imgs[slideIndex - 1].style.display = 'block';
+  imgs[slideIndex[idx] - 1].style.display = 'block';
 }
 
 function initMap() {
@@ -137,7 +142,7 @@ function searchRestaurant(map, infoWindow, placesService, pos, option) {
   });
 }
 
-function createRestaurantBlock(details) {
+function createRestaurantBlock(details, idx) {
   let rest = document.createElement('div');
   rest.className = 'rest';
 
@@ -156,9 +161,10 @@ function createRestaurantBlock(details) {
 
   let leftButton = document.createElement('button');
   leftButton.addEventListener('click', function () {
-    plusDivs(-1);
+    nextPage(false, idx);
   });
-  leftButton.innerHTML = '❮';
+  leftButton.innerHTML =
+    details.hasOwnProperty('photos') && (details.photos.length != 1) ? '❮' : '';
   slideButton.appendChild(leftButton);
 
   let slideImg;
@@ -166,7 +172,8 @@ function createRestaurantBlock(details) {
   if (details.hasOwnProperty('photos')) {
     for (let i = 0; i < details.photos.length; i++) {
       slideImg = document.createElement('div');
-      slideImg.className = 'slide-img col s2';
+      slideImg.className = 'slide-img' + idx + ' col s2';i
+      slideImg.style.display = 'none';
       if (i == 0) {
         slideImg.style.display = 'block';
       }
@@ -182,7 +189,7 @@ function createRestaurantBlock(details) {
     }
   } else {
     slideImg = document.createElement('div');
-    slideImg.className = 'slide-img col s2';
+    slideImg.className = 'slide-img' + idx + ' col s2';
     slideImg.style.display = 'block';
     row.appendChild(slideImg);
 
@@ -198,9 +205,10 @@ function createRestaurantBlock(details) {
 
   let rightButton = document.createElement('button');
   rightButton.addEventListener('click', function () {
-    plusDivs(1);
+    nextPage(true, idx);
   });
-  rightButton.innerHTML = '❯';
+  rightButton.innerHTML =
+    details.hasOwnProperty('photos') && (details.photos.length != 1) ? '❯' : '';
   slideButton.appendChild(rightButton);
 
   let restInfo = document.createElement('div');
@@ -279,21 +287,25 @@ function createRestaurantBlock(details) {
 }
 
 function showRestaurantsDetails(places, placesService) {
-  let request = {
-    placeId: places[0].place_id,
-  };
+  let results = document.getElementById('rest-results');
 
   return new Promise((resolve, reject) => {
-    placesService.getDetails(request, function (details, status) {
-      if (status == google.maps.places.PlacesServiceStatus.OK) {
-        let results = document.getElementById('rest-results');
-        results.appendChild(createRestaurantBlock(details));
-        resolve();
-      } else {
-        // FIXME Should handle error state
-        alert('Get restaurant details failed: ' + status);
-      }
-    });
+    for (let i = 0; i < RESULTS_NUM; i++) {
+      let request = {
+        placeId: places[i].place_id,
+      };
+
+      placesService.getDetails(request, function (details, status) {
+        if (status == google.maps.places.PlacesServiceStatus.OK) {
+          results.appendChild(createRestaurantBlock(details, i));
+        } else {
+          // FIXME Should handle error state
+          alert('Get restaurant details failed: ' + status);
+          reject();
+        }
+      });
+    }
+    resolve();
   });
 }
 
@@ -339,12 +351,28 @@ function goButtonInit(map, userPos, markers, infoWindow, placesService,
         return;
       }
 
-      let random = Math.floor((Math.random() * places.length));
+      let arr = [];
+      let results = [];
+      while (arr.length < RESULTS_NUM) {
+        let random = Math.floor((Math.random() * places.length));
+
+        if(arr.indexOf(random) > -1)
+          continue;
+
+        arr.push(random);
+        results.push(places[random]);
+      }
+
+
+      // FIXME Create marker and route after a restaurant is selected
       markers.push(createMarker(map, infoWindow,
-                   places[random].geometry.location, places[random].name));
+                   results[0].geometry.location, results[0].name));
+
       createRoute(map, directionsService, directionsDisplay, userPos,
-                  places[random].geometry.location);
-      return showRestaurantsDetails(new Array(places[random]), placesService);
+                  results[0].geometry.location);
+
+
+      return showRestaurantsDetails(results, placesService);
     }).then(function() {
       endLoading();
     });
