@@ -103,7 +103,6 @@ function createMarker(map, pos, name, icon = '') {
 }
 
 function createRoute(map, directionsDisplay, origin, destination) {
-  console.log(map);
   let directionsService = new google.maps.DirectionsService;
 
   directionsDisplay.setMap(map);
@@ -115,7 +114,6 @@ function createRoute(map, directionsDisplay, origin, destination) {
     if (status == google.maps.DirectionsStatus.OK) {
       directionsDisplay.setDirections(response);
     } else {
-      // FIXME Should handle error state
       alert('Create route failed: ' + status);
     }
   });
@@ -143,8 +141,8 @@ function searchRestaurant(map, pos, options) {
           resolve(allPlaces);
         }
       } else {
-        // FIXME Should handle error state
         alert('Search nearby restaurants failed: ' + status);
+        reject();
       }
     });
   });
@@ -320,14 +318,13 @@ function showRestaurantsDetails(map, userPos, places, markers,
           results.appendChild(
             createRestaurantBlock(map, userPos, details, markers,
                                   directionsDisplay, i));
+          resolve();
         } else {
-          // FIXME Should handle error state
           alert('Get restaurant details failed: ' + status);
           reject();
         }
       });
     }
-    resolve();
   });
 }
 
@@ -387,7 +384,7 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
 
       return showRestaurantsDetails(map, userPos, results, markers,
                                     directionsDisplay);
-    }).then(function() {
+    }).finally(function() {
       // Finish searching
       endLoading();
     });
