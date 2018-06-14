@@ -164,7 +164,7 @@ select {
     opacity: 1;
   }
 }
-
+/*
 .drop-btn:after {
   content: '\2304';
 }
@@ -172,7 +172,7 @@ select {
 .dropdown:hover .drop-btn:after{
 	content: '\02C4';
 }
-
+*/
 .slide-btn>button {
   color: #aaa;
   background-color: Transparent;

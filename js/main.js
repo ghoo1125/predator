@@ -51,7 +51,7 @@ function initMap() {
   return map
 }
 
-function clearMapAndResults(markers, directionsDisplay) {
+function clearMapAndResults(markers, directionsDisplay, clearResults = true) {
   if (markers.length > 0) {
     for (let i = 0; i < markers.length; i++) {
       markers[i].setMap(null);
@@ -60,9 +60,11 @@ function clearMapAndResults(markers, directionsDisplay) {
   }
   directionsDisplay.setMap(null);
 
-  let results = document.getElementById('rest-results');
-  while (results.firstChild) {
-    results.removeChild(results.firstChild);
+  if (clearResults) {
+    let results = document.getElementById('rest-results');
+    while (results.firstChild) {
+      results.removeChild(results.firstChild);
+    }
   }
 }
 
@@ -84,7 +86,8 @@ function endLoading() {
   loading.style.display = 'none';
 }
 
-function createMarker(map, infoWindow, pos, name, icon = '') {
+function createMarker(map, pos, name, icon = '') {
+  let infoWindow = new google.maps.InfoWindow({map: map});
   let marker = new google.maps.Marker({
     map: map,
     icon: icon,
@@ -99,7 +102,10 @@ function createMarker(map, infoWindow, pos, name, icon = '') {
   return marker;
 }
 
-function createRoute(map, directionsService, directionsDisplay, origin, destination) {
+function createRoute(map, directionsDisplay, origin, destination) {
+  console.log(map);
+  let directionsService = new google.maps.DirectionsService;
+
   directionsDisplay.setMap(map);
   directionsService.route({
     origin: origin,
@@ -115,14 +121,16 @@ function createRoute(map, directionsService, directionsDisplay, origin, destinat
   });
 }
 
-function searchRestaurant(map, infoWindow, placesService, pos, option) {
+function searchRestaurant(map, pos, options) {
+  let infoWindow = new google.maps.InfoWindow({map: map});
+  let placesService = new google.maps.places.PlacesService(map);
   let allPlaces = []; // maximum 60...
 
   let request = {
     location: pos,
-    radius: option.radius, /* maximum 50,000 meter */
+    radius: options.radius, /* maximum 50,000 meter */
     type: 'restaurant',
-    openNow: option.openNow,
+    openNow: options.openNow,
   };
   return new Promise((resolve, reject) => {
     placesService.nearbySearch(request, (places, status, pagination) => {
@@ -142,7 +150,8 @@ function searchRestaurant(map, infoWindow, placesService, pos, option) {
   });
 }
 
-function createRestaurantBlock(details, idx) {
+function createRestaurantBlock(map, userPos, details, markers,
+                               directionsDisplay, idx) {
   let rest = document.createElement('div');
   rest.className = 'rest';
 
@@ -243,6 +252,15 @@ function createRestaurantBlock(details, idx) {
   addrName.innerHTML = details.formatted_address;
   restAddr.appendChild(addrName);
 
+  let routeButton = document.createElement('button');
+  routeButton.innerHTML = 'Go!';
+  restInfo.appendChild(routeButton);
+  routeButton.addEventListener('click', function () {
+    clearMapAndResults(markers, directionsDisplay, false /* clearResults */);
+    createRoute(map, directionsDisplay, userPos, details.geometry.location);
+    markers.push(createMarker(map, details.geometry.location, details.name));
+  });
+/*
   let restTime = document.createElement('div');
   restTime.className = 'rest-time';
   restInfo.appendChild(restTime);
@@ -282,11 +300,13 @@ function createRestaurantBlock(details, idx) {
     list.innerHTML = '很抱歉，查無營業時間。';
     content.appendChild(list);
   }
-
+*/
   return rest;
 }
 
-function showRestaurantsDetails(places, placesService) {
+function showRestaurantsDetails(map, userPos, places, markers,
+                                directionsDisplay) {
+  let placesService = new google.maps.places.PlacesService(map);
   let results = document.getElementById('rest-results');
 
   return new Promise((resolve, reject) => {
@@ -297,7 +317,9 @@ function showRestaurantsDetails(places, placesService) {
 
       placesService.getDetails(request, function (details, status) {
         if (status == google.maps.places.PlacesServiceStatus.OK) {
-          results.appendChild(createRestaurantBlock(details, i));
+          results.appendChild(
+            createRestaurantBlock(map, userPos, details, markers,
+                                  directionsDisplay, i));
         } else {
           // FIXME Should handle error state
           alert('Get restaurant details failed: ' + status);
@@ -309,8 +331,7 @@ function showRestaurantsDetails(places, placesService) {
   });
 }
 
-function goButtonInit(map, userPos, markers, infoWindow, placesService,
-                      directionsService, directionsDisplay) {
+function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
   let btn = document.getElementById('btn-go');
   btn.addEventListener('click', function() {
     let distance = document.getElementById('distance');
@@ -326,25 +347,26 @@ function goButtonInit(map, userPos, markers, infoWindow, placesService,
       return;
     }
 */
-    // clear map
+    // Clear markers, routes and restaurants information
     clearMapAndResults(markers, directionsDisplay);
 
-    // searchRestaurant and show results
+    // Need user position
     if (!userPos) {
       alert('定位中，請稍後再試。');
       return;
     }
 
+    // Wait for searching
     startLoading();
 
-    let option = {
+    // SearchRestaurant and show results
+    let options = {
       'radius': distance.value,
       'price': price.value,
       // Don't show closed restaurants
       'openNow': true
     };
-    let searchPromise = searchRestaurant(
-      map, infoWindow, placesService, userPos, option);
+    let searchPromise = searchRestaurant(map, userPos, options);
     searchPromise.then((places) => {
       if (places.length == 0) {
         alert('很抱歉，目前找不到適合的餐廳。');
@@ -363,17 +385,10 @@ function goButtonInit(map, userPos, markers, infoWindow, placesService,
         results.push(places[random]);
       }
 
-
-      // FIXME Create marker and route after a restaurant is selected
-      markers.push(createMarker(map, infoWindow,
-                   results[0].geometry.location, results[0].name));
-
-      createRoute(map, directionsService, directionsDisplay, userPos,
-                  results[0].geometry.location);
-
-
-      return showRestaurantsDetails(results, placesService);
+      return showRestaurantsDetails(map, userPos, results, markers,
+                                    directionsDisplay);
     }).then(function() {
+      // Finish searching
       endLoading();
     });
   }); // add btn event listener
@@ -382,10 +397,8 @@ function goButtonInit(map, userPos, markers, infoWindow, placesService,
 function main() {
   let map = initMap();
   let userPos;
+  // Preserve markers array since we might want multiple markers
   let markers = [];
-  let infoWindow = new google.maps.InfoWindow({map: map});
-  let placesService = new google.maps.places.PlacesService(map);
-  let directionsService = new google.maps.DirectionsService;
   let directionsDisplay = new google.maps.DirectionsRenderer({
     suppressMarkers: true,
   });
@@ -397,10 +410,9 @@ function main() {
       map.setCenter(userPos);
       map.setZoom(15);
       let icon = './img/person.png'
-      createMarker(map, infoWindow, userPos, '你的位置', icon);
+      createMarker(map, userPos, '你的位置', icon);
 
-      goButtonInit(map, userPos, markers, infoWindow, placesService,
-                   directionsService, directionsDisplay);
+      addGoButtonEvent(map, userPos, markers, directionsDisplay);
     }, function() {
       alert('Sorry, please permit accessibility to your current location.');
       return;
