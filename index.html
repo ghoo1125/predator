@@ -13,8 +13,6 @@
               current position.
 
     restaurantStyle: Restaurant style that user expect.
-
-    price: Price range for a meal that user expect.
   -->
 
   <link rel="stylesheet" type="text/css" href="css/style.css">
@@ -25,19 +23,22 @@
 <body>
   <div>
     <div class="left">
-      <select id="distance" class="option">
-        <option value="-1" selected="selected" disabled>距離</option>
-        <option value="500">500公尺內</option>
-        <option value="1000">1公里內</option>
-        <option value="3000">3公里內</option>
-        <option value="5000">5公里內</option>
-      </select>
-      <select id="price" class="option" style="visibility: hidden;">
-        <option value="-1" selected="selected" disabled>價位</option>
-        <option value="1">平民</option>
-        <option value="2">中等</option>
-        <option value="3">高檔</option>
-      </select>
+      <div class="user-select">
+        <select id="distance" class="option">
+          <option value="-1" selected="selected" disabled>距離</option>
+          <option value="500">500公尺內</option>
+          <option value="1000">1公里內</option>
+          <option value="3000">3公里內</option>
+          <option value="5000">5公里內</option>
+        </select>
+        <div class="custom-select" style="display: none;">
+          <p>Distance</p>
+          <button class="custom-button">SELECT</button>
+          <div class="custom-option">less than 500m</div>
+          <div class="custom-option">less than 2km</div>
+          <div class="custom-option">any</div>
+        </div>
+      </div>
     </div>
 
     <div class="mid">
@@ -98,6 +99,7 @@
   </div>
 
   <script type="text/javascript" charset="UTF-8" src="js/main.js"></script>
+  <script type="text/javascript" charset="UTF-8" src="js/custom_select.js"></script>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAVsffuGECQBSJPxfl8CWTiwZENjLABueU&callback=main&libraries=places">
   </script>

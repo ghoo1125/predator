@@ -23,18 +23,18 @@ ul {
 }
 
 select {
-    display: inline-block;
-    padding: 1rem 2rem;
-    background: #FFF;
-    color: #777;
-    border: 1px solid #999;
-    border-radius: 25px;
-    font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
-    font-size: 1rem;
-    text-align: center;
-    cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
+  display: block;
+  padding: 1rem 2rem;
+  background: #FFF;
+  color: #777;
+  border: 1px solid #999;
+  border-radius: 10px;
+  font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
+  font-size: 1rem;
+  text-align: center;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .logo {
@@ -63,9 +63,63 @@ select {
   float: left;
 }
 
-.option {
+.user-select {
+  top: 20vh;
   position: relative;
-  top: 25%;
+}
+
+.custom-select {
+  text-align: center;
+  font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
+  margin: 20px 10px;
+}
+
+.custom-select>p {
+  color: #777;
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 2px auto;
+  letter-spacing: 2px;
+}
+
+.custom-button {
+  display: block;
+  width: 60%;
+  height: 10%;
+  margin: 0 auto;
+  padding: 15px 0;
+  background: #FFF;
+  color: #777;
+  border: 1px solid #999;
+  border-radius: 10px;
+  font-size: 12pt;
+  letter-spacing: 1px;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.custom-option {
+  width: 50%;
+  margin: 0 auto;
+  font-size: 10pt;
+  padding: 5px 0;
+  background: #FFF;
+  color: #777;
+  cursor: pointer;
+  border: 1px solid #999;
+  border-top: none;
+  display: none;
+  position: absolute;
+}
+
+.custom-option:hover {
+  color: #ddd;
+  background: #999;
+}
+
+.option {
   display: block;
   width: 50%;
   height: 10%;

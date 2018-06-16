@@ -3,14 +3,6 @@ const distanceOptions = {
   /* options value are set to the distance */
 }
 
-const priceOptions = {
-  NONE: -1,
-  /* start from 1 to align with price_level defined in PlaceResult */
-  INEXPENSIVE: 1,
-  MODERATE: 2,
-  EXPENSIVE: 3,
-}
-
 // The number of retaurants' results that we show
 const RESULTS_NUM = 3;
 
@@ -340,14 +332,7 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
       alert('Please choose a distance.')
       return;
     }
-/*
-    // Few restaurants are ranked
-    let price = document.getElementById('price');
-    if (price.value == priceOptions.NONE) {
-      alert('Please choose a price.')
-      return;
-    }
-*/
+
     // Clear markers, routes and restaurants information
     clearMapAndResults(markers, directionsDisplay);
 
@@ -363,7 +348,6 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
     // SearchRestaurant and show results
     let options = {
       'radius': distance.value,
-      'price': price.value,
       // Don't show closed restaurants
       'openNow': true
     };
