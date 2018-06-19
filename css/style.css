@@ -133,6 +133,9 @@ select {
   font-size: 16pt;
   text-align: center;
   font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  color: #4169E1;
 }
 
 .rest-img {
