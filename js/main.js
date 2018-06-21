@@ -111,27 +111,32 @@ function createRoute(map, directionsDisplay, origin, destination) {
   });
 }
 
+/*
+Store the queried restaurants globally since we might asynchronously push and
+pop the restaurants. Noted that we can only query at most 60 restaurants.
+*/
+let allPlaces = [];
 function searchRestaurant(map, pos, options) {
   let infoWindow = new google.maps.InfoWindow({map: map});
   let placesService = new google.maps.places.PlacesService(map);
-  let allPlaces = []; // maximum 60...
 
   let request = {
     location: pos,
-    radius: options.radius, /* maximum 50,000 meter */
+    radius: options.distance, /* maximum 50,000 meter */
     type: 'restaurant',
     openNow: options.openNow,
   };
   return new Promise((resolve, reject) => {
     placesService.nearbySearch(request, (places, status, pagination) => {
       if (status == google.maps.places.PlacesServiceStatus.OK) {
-        // FIXME long delay if search all 60 restaurants
         allPlaces = allPlaces.concat(places);
-        if (pagination.hasNextPage) {
-          pagination.nextPage();
-        } else {
-          resolve(allPlaces);
-        }
+        // Query next page results after every 2 seconds according to API
+        setTimeout(function() {
+          if (pagination.hasNextPage) {
+            pagination.nextPage();
+          }
+        }, 2000);
+        resolve();
       } else {
         alert('Search nearby restaurants failed: ' + status);
         reject();
@@ -324,8 +329,27 @@ function showRestaurantsDetails(map, userPos, places, markers,
   });
 }
 
+function recommendRestaurants(places) {
+  let rv = [];
+
+  // Generate RESULTS_NUM random numbers
+  let count = 0;
+  while (count < RESULTS_NUM) {
+    let random = Math.floor((Math.random() * places.length));
+    count++;
+    rv.push(places[random]);
+    places.splice(random, 1);
+  }
+
+  return rv;
+}
+
 function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
   let btn = document.getElementById('btn-go');
+  let oldOptions = {
+    'distance': -1,
+  };
+
   btn.addEventListener('click', function() {
     let distance = document.getElementById('distance');
     if (distance.value == distanceOptions.NONE) {
@@ -336,46 +360,33 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
     // Clear markers, routes and restaurants information
     clearMapAndResults(markers, directionsDisplay);
 
-    // Need user position
-    if (!userPos) {
-      alert('定位中，請稍後再試。');
-      return;
-    }
-
     // Wait for searching
     startLoading();
 
-    // SearchRestaurant and show results
-    let options = {
-      'radius': distance.value,
-      // Don't show closed restaurants
-      'openNow': true
-    };
-    let searchPromise = searchRestaurant(map, userPos, options);
-    searchPromise.then((places) => {
-      if (places.length == 0) {
-        alert('很抱歉，目前找不到適合的餐廳。');
-        return;
-      }
-
-      let arr = [];
-      let results = [];
-      while (arr.length < RESULTS_NUM) {
-        let random = Math.floor((Math.random() * places.length));
-
-        if(arr.indexOf(random) > -1)
-          continue;
-
-        arr.push(random);
-        results.push(places[random]);
-      }
-
-      return showRestaurantsDetails(map, userPos, results, markers,
-                                    directionsDisplay);
-    }).finally(function() {
-      // Finish searching
+    if (allPlaces.length < RESULTS_NUM || oldOptions.distance != distance.value) {
+      // SearchRestaurant and show results
+      let options = {
+        'distance': distance.value,
+        // Don't show closed restaurants
+        'openNow': true
+      };
+      let searchPromise = searchRestaurant(map, userPos, options);
+      searchPromise.then(() => {
+        let restaurants = recommendRestaurants(allPlaces);
+        return showRestaurantsDetails(map, userPos, restaurants, markers,
+                                      directionsDisplay);
+      }).finally(function() {
+        // Finish searching
+        endLoading();
+      });
+    } else {
+      let restaurants = recommendRestaurants(allPlaces);
+      showRestaurantsDetails(map, userPos, restaurants, markers,
+                             directionsDisplay);
       endLoading();
-    });
+    }
+
+    oldOptions.distance = distance.value;
   }); // add btn event listener
 }
 
