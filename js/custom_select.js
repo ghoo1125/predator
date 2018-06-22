@@ -16,9 +16,15 @@
       // Do not let document hide the options
       e.stopPropagation();
 
+      // Close other options
+      let options = document.getElementsByClassName('custom-option');
+      for (let i = 0; i < options.length; i++) {
+        options[i].style.display = 'none';
+      }
+
       // Need to navigate again since the dom tree might change
       node = select[i].firstChild;
-      let options = [];
+      options = [];
 
       while (node.nextSibling) {
         if (node.constructor.name == 'HTMLDivElement' &&
