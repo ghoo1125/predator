@@ -24,19 +24,12 @@
   <div>
     <div class="left">
       <div class="user-select">
-        <select id="distance" class="option">
-          <option value="-1" selected="selected" disabled>距離</option>
-          <option value="500">500公尺內</option>
-          <option value="1000">1公里內</option>
-          <option value="3000">3公里內</option>
-          <option value="5000">5公里內</option>
-        </select>
-        <div class="custom-select" style="display: none;">
-          <p>Distance</p>
+        <div class="custom-select">
+          <p id='custom-distance'>Distance</p>
           <button class="custom-button">SELECT</button>
-          <div class="custom-option">less than 500m</div>
-          <div class="custom-option">less than 2km</div>
-          <div class="custom-option">any</div>
+          <div class="custom-option">< 500m</div>
+          <div class="custom-option">< 2000m</div>
+          <div class="custom-option">Arbitrary</div>
         </div>
       </div>
     </div>

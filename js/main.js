@@ -1,6 +1,8 @@
 const distanceOptions = {
-  NONE: -1,
-  /* options value are set to the distance */
+  'SELECT': -1,
+  '&lt; 500m': 500,
+  '&lt; 2000m': 2000,
+  'Arbitrary': 10000,
 }
 
 // The number of retaurants' results that we show
@@ -344,6 +346,18 @@ function recommendRestaurants(places) {
   return rv;
 }
 
+function getCustomSelectFieldName(selectName) {
+  let select = document.getElementById(selectName);
+  while (select.nextSibling) {
+    if (select.constructor.name == 'HTMLButtonElement' &&
+        select.className == 'custom-button') {
+      break;
+    }
+    select = select.nextSibling;
+  }
+  return select.innerHTML;
+}
+
 function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
   let btn = document.getElementById('btn-go');
   let oldOptions = {
@@ -351,8 +365,8 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
   };
 
   btn.addEventListener('click', function() {
-    let distance = document.getElementById('distance');
-    if (distance.value == distanceOptions.NONE) {
+    let k = getCustomSelectFieldName('custom-distance');
+    if (distanceOptions[k] < 0) {
       alert('Please choose a distance.')
       return;
     }
@@ -363,10 +377,11 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
     // Wait for searching
     startLoading();
 
-    if (allPlaces.length < RESULTS_NUM || oldOptions.distance != distance.value) {
+    if (allPlaces.length < RESULTS_NUM ||
+        oldOptions.distance != distanceOptions[k]) {
       // SearchRestaurant and show results
       let options = {
-        'distance': distance.value,
+        'distance': distanceOptions[k],
         // Don't show closed restaurants
         'openNow': true
       };
@@ -386,7 +401,8 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
       endLoading();
     }
 
-    oldOptions.distance = distance.value;
+    oldOptions.distance = distanceOptions[k];
+
   }); // add btn event listener
 }
 
