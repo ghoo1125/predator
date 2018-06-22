@@ -63,9 +63,10 @@ select {
   float: left;
 }
 
-.user-select {
+.selects {
   top: 20vh;
   position: relative;
+  user-select: none;
 }
 
 .custom-select {

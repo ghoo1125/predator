@@ -5,10 +5,15 @@ const distanceOptions = {
   'Arbitrary': 10000,
 }
 
+const typeOptions = {
+  'SELECT': -1,
+  'Vegan': 0,
+  'Arbitrary': 1,
+}
+
 // The number of retaurants' results that we show
 const RESULTS_NUM = 3;
 
-// FIXME store slide idx as global variable
 let slideIndex = new Array(RESULTS_NUM);
 (function slideIndexInit() {
   for (let i = 0; i < slideIndex.length; i++) {
@@ -128,6 +133,9 @@ function searchRestaurant(map, pos, options) {
     type: 'restaurant',
     openNow: options.openNow,
   };
+  if (options.type == typeOptions.Vegan) {
+    request.keyword = '素食';
+  }
   return new Promise((resolve, reject) => {
     placesService.nearbySearch(request, (places, status, pagination) => {
       if (status == google.maps.places.PlacesServiceStatus.OK) {
@@ -362,12 +370,19 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
   let btn = document.getElementById('btn-go');
   let oldOptions = {
     'distance': -1,
+    'type': -1,
   };
 
   btn.addEventListener('click', function() {
-    let k = getCustomSelectFieldName('custom-distance');
-    if (distanceOptions[k] < 0) {
+    let distanceName = getCustomSelectFieldName('custom-distance');
+    if (distanceOptions[distanceName] < 0) {
       alert('Please choose a distance.')
+      return;
+    }
+
+    let typeName = getCustomSelectFieldName('custom-type');
+    if (typeOptions[typeName] < 0) {
+      alert('Please choose a restaurant type.')
       return;
     }
 
@@ -378,11 +393,14 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
     startLoading();
 
     if (allPlaces.length < RESULTS_NUM ||
-        oldOptions.distance != distanceOptions[k]) {
+        oldOptions.distance != distanceOptions[distanceName] ||
+        oldOptions.type != typeOptions[typeName]) {
       // SearchRestaurant and show results
+      allPlaces = [];
       let options = {
-        'distance': distanceOptions[k],
-        // Don't show closed restaurants
+        'distance': distanceOptions[distanceName],
+        'type': typeOptions[typeName],
+        // Do not show closed restaurants
         'openNow': true
       };
       let searchPromise = searchRestaurant(map, userPos, options);
@@ -401,8 +419,8 @@ function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
       endLoading();
     }
 
-    oldOptions.distance = distanceOptions[k];
-
+    oldOptions.distance = distanceOptions[distanceName];
+    oldOptions.type = typeOptions[typeName];
   }); // add btn event listener
 }
 
