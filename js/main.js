@@ -409,12 +409,12 @@ function startSearch(map, markers, directionsDisplay, userPos) {
   // Clear markers, routes and restaurants information
   clearMapAndResults(markers, directionsDisplay);
 
-  // Wait for searching
-  startLoading();
-
   if (allPlaces.length < RESULTS_NUM ||
       oldOptions.distance != distanceOptions[distanceName] ||
       oldOptions.type != typeOptions[typeName]) {
+    // Wait for searching
+    startLoading();
+
     // SearchRestaurant and show results
     allPlaces = [];
     let options = {
@@ -426,9 +426,9 @@ function startSearch(map, markers, directionsDisplay, userPos) {
     let searchPromise = searchRestaurant(map, userPos, options);
     searchPromise.then(() => {
       let restaurants = recommendRestaurants(allPlaces);
-      return showRestaurantsDetails(map, userPos, restaurants, markers,
-                                    directionsDisplay);
-    }).finally(function() {
+      showRestaurantsDetails(map, userPos, restaurants, markers,
+                             directionsDisplay);
+
       // Finish searching
       endLoading();
     });
@@ -436,7 +436,6 @@ function startSearch(map, markers, directionsDisplay, userPos) {
     let restaurants = recommendRestaurants(allPlaces);
     showRestaurantsDetails(map, userPos, restaurants, markers,
                            directionsDisplay);
-    endLoading();
   }
 
   oldOptions.distance = distanceOptions[distanceName];
