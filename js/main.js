@@ -50,7 +50,7 @@ function initMap() {
   return map
 }
 
-function clearMapAndResults(markers, directionsDisplay, clearResults = true) {
+function clearMapAndResults(markers, directionsDisplay, clearResults=true) {
   if (markers.length > 0) {
     for (let i = 0; i < markers.length; i++) {
       markers[i].setMap(null);
@@ -69,19 +69,19 @@ function clearMapAndResults(markers, directionsDisplay, clearResults = true) {
 
 function startLoading() {
   // start loading
-  let btn = document.getElementById('btn-go');
+  let goButton = document.getElementById('btn-go');
   let loading = document.getElementById('loading');
 
-  btn.style.display = 'none';
+  goButton.style.display = 'none';
   loading.style.display = 'block';
 }
 
 function endLoading() {
   // end loading
-  let btn = document.getElementById('btn-go');
+  let goButton = document.getElementById('btn-go');
   let loading = document.getElementById('loading');
 
-  btn.style.display = 'block';
+  goButton.style.display = 'block';
   loading.style.display = 'none';
 }
 
@@ -366,86 +366,141 @@ function getCustomSelectFieldName(selectName) {
   return select.innerHTML;
 }
 
-function addGoButtonEvent(map, userPos, markers, directionsDisplay) {
-  let btn = document.getElementById('btn-go');
+function findLocationByText(map, searchText) {
+  let request = {
+    query: searchText,
+  };
+
+  let service = new google.maps.places.PlacesService(map);
+  return new Promise((resolve, reject) => {
+    service.textSearch(request, function(results, status) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        resolve(results[0].geometry.location);
+      } else {
+        alert('Search place failed: ' + status);
+      }
+    });
+  });
+}
+
+function startSearch(map, markers, directionsDisplay, userPos) {
   let oldOptions = {
     'distance': -1,
     'type': -1,
   };
 
-  btn.addEventListener('click', function() {
-    let distanceName = getCustomSelectFieldName('custom-distance');
-    if (distanceOptions[distanceName] < 0) {
-      alert('Please choose a distance.')
-      return;
-    }
+  if (!userPos) {
+    alert('Please set a poistion.');
+    return;
+  }
 
-    let typeName = getCustomSelectFieldName('custom-type');
-    if (typeOptions[typeName] < 0) {
-      alert('Please choose a restaurant type.')
-      return;
-    }
+  let distanceName = getCustomSelectFieldName('custom-distance');
+  if (distanceOptions[distanceName] < 0) {
+    alert('Please choose a distance.')
+    return;
+  }
 
-    // Clear markers, routes and restaurants information
-    clearMapAndResults(markers, directionsDisplay);
+  let typeName = getCustomSelectFieldName('custom-type');
+  if (typeOptions[typeName] < 0) {
+    alert('Please choose a restaurant type.')
+    return;
+  }
 
-    // Wait for searching
-    startLoading();
+  // Clear markers, routes and restaurants information
+  clearMapAndResults(markers, directionsDisplay);
 
-    if (allPlaces.length < RESULTS_NUM ||
-        oldOptions.distance != distanceOptions[distanceName] ||
-        oldOptions.type != typeOptions[typeName]) {
-      // SearchRestaurant and show results
-      allPlaces = [];
-      let options = {
-        'distance': distanceOptions[distanceName],
-        'type': typeOptions[typeName],
-        // Do not show closed restaurants
-        'openNow': true
-      };
-      let searchPromise = searchRestaurant(map, userPos, options);
-      searchPromise.then(() => {
-        let restaurants = recommendRestaurants(allPlaces);
-        return showRestaurantsDetails(map, userPos, restaurants, markers,
-                                      directionsDisplay);
-      }).finally(function() {
-        // Finish searching
-        endLoading();
-      });
-    } else {
+  // Wait for searching
+  startLoading();
+
+  if (allPlaces.length < RESULTS_NUM ||
+      oldOptions.distance != distanceOptions[distanceName] ||
+      oldOptions.type != typeOptions[typeName]) {
+    // SearchRestaurant and show results
+    allPlaces = [];
+    let options = {
+      'distance': distanceOptions[distanceName],
+      'type': typeOptions[typeName],
+      // Do not show closed restaurants
+      'openNow': true
+    };
+    let searchPromise = searchRestaurant(map, userPos, options);
+    searchPromise.then(() => {
       let restaurants = recommendRestaurants(allPlaces);
-      showRestaurantsDetails(map, userPos, restaurants, markers,
-                             directionsDisplay);
+      return showRestaurantsDetails(map, userPos, restaurants, markers,
+                                    directionsDisplay);
+    }).finally(function() {
+      // Finish searching
       endLoading();
-    }
+    });
+  } else {
+    let restaurants = recommendRestaurants(allPlaces);
+    showRestaurantsDetails(map, userPos, restaurants, markers,
+                           directionsDisplay);
+    endLoading();
+  }
 
-    oldOptions.distance = distanceOptions[distanceName];
-    oldOptions.type = typeOptions[typeName];
-  }); // add btn event listener
+  oldOptions.distance = distanceOptions[distanceName];
+  oldOptions.type = typeOptions[typeName];
+}
+
+function addButtonsEvent(map, markers, directionsDisplay) {
+  let userPos = null;
+  let userMarker = null;
+  let icon = './img/person.png'
+
+  // Register search place event
+  let searchBar = document.getElementById('place-search');
+  let autocomplete = new google.maps.places.Autocomplete(searchBar);
+  document.getElementById('place-button').addEventListener('click', function() {
+    let posPromise = findLocationByText(map, searchBar.value);
+    posPromise.then((val) => {
+      userPos = val;
+      map.setCenter(userPos);
+      map.setZoom(15);
+      if (userMarker) {
+        userMarker.setMap(null);
+        clearMapAndResults(markers, directionsDisplay);
+      }
+      userMarker = createMarker(map, userPos, searchBar.value, icon);
+    });
+  });
+
+  // Register current location button event
+  let currentButton = document.getElementById('current-button');
+  currentButton.addEventListener('click', function() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(curPos) {
+        // Set to current position
+        userPos = {lat: curPos.coords.latitude, lng: curPos.coords.longitude};
+        map.setCenter(userPos);
+        map.setZoom(15);
+        if (userMarker) {
+          userMarker.setMap(null);
+          clearMapAndResults(markers, directionsDisplay);
+        }
+        userMarker = createMarker(map, userPos, '你的位置', icon);
+      })
+    } else {
+      alert('Sorry, please permit accessibility to your current location.');
+      return;
+    }
+  });
+
+  // Register search retaurants event
+  let goButton = document.getElementById('btn-go');
+  goButton.addEventListener('click', function() {
+    startSearch(map, markers, directionsDisplay, userPos);
+  });
 }
 
 function main() {
   let map = initMap();
-  let userPos;
   // Preserve markers array since we might want multiple markers
   let markers = [];
   let directionsDisplay = new google.maps.DirectionsRenderer({
     suppressMarkers: true,
   });
 
-  // Set to current position and register button event
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(curPos) {
-      userPos = {lat: curPos.coords.latitude, lng: curPos.coords.longitude};
-      map.setCenter(userPos);
-      map.setZoom(15);
-      let icon = './img/person.png'
-      createMarker(map, userPos, '你的位置', icon);
-
-      addGoButtonEvent(map, userPos, markers, directionsDisplay);
-    }, function() {
-      alert('Sorry, please permit accessibility to your current location.');
-      return;
-    });
-  }
+  // Register Go button event
+  addButtonsEvent(map, markers, directionsDisplay);
 }

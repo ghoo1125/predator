@@ -1,6 +1,7 @@
 body, html {
   padding: 0;
   margin: 0;
+  user-select: none;
 }
 
 body:after {
@@ -40,7 +41,6 @@ select {
 .logo {
   display: block;
   margin: 20px auto;
-  user-select: none;
   /* 1229 * 377 */
   width: 36.87vw;
   height: 11.31vw;
@@ -66,7 +66,6 @@ select {
 .selects {
   top: 20vh;
   position: relative;
-  user-select: none;
 }
 
 .custom-select {
@@ -136,6 +135,18 @@ select {
   opacity: 0.8;
 }
 
+#place-search {
+  width: 50%;
+}
+
+#place-button {
+  width: 10%;
+}
+
+#current-button {
+  width: 20%;
+}
+
 #btn-go {
   display: block;
 	height: 80px;
@@ -151,7 +162,6 @@ select {
 	border-top-color: #999;
 	border-bottom: 4px solid #555;
 	border-radius: 50px;
-	user-select: none;
   outline: none;
   margin: 10px auto;
 }
@@ -166,7 +176,6 @@ select {
 	border-top-color: #999;
 	border-bottom: 4px solid #555;
 	border-radius: 50px;
-	user-select: none;
   margin: 10px auto;
 }
 
@@ -197,10 +206,10 @@ select {
   margin: 0 auto;
   width: 100%;
   height: 150px;
-  user-select: none;
 }
 
 .rest-info {
+  user-select: text;
   margin: 0 0 0 10%;
   line-height: 1.5;
 }
@@ -239,7 +248,6 @@ select {
   cursor: pointer;
   padding: 0;
   margin: 80px 0 0 35%;
-  user-select: none;
   font-size: 16pt;
 }
 
