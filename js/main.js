@@ -104,17 +104,23 @@ function createMarker(map, pos, name, icon = '') {
 function createRoute(map, directionsDisplay, origin, destination) {
   let directionsService = new google.maps.DirectionsService;
 
-  directionsDisplay.setMap(map);
-  directionsService.route({
-    origin: origin,
-    destination: destination,
-    travelMode: 'DRIVING'
-  }, function(response, status) {
-    if (status == google.maps.DirectionsStatus.OK) {
-      directionsDisplay.setDirections(response);
-    } else {
-      alert('Create route failed: ' + status);
-    }
+  return new Promise((resolve, reject) => {
+    let request =  {
+      origin: origin,
+      destination: destination,
+      travelMode: 'DRIVING'
+    };
+    directionsService.route(request, function(response, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        resolve({
+          'route': response,
+          'distance': response.routes[0].legs[0].distance.text,
+          'time': response.routes[0].legs[0].duration.text,
+        });
+      } else {
+        alert('Create route failed: ' + status);
+      }
+    });
   });
 }
 
@@ -263,12 +269,36 @@ function createRestaurantBlock(map, userPos, details, markers,
 
   let routeButton = document.createElement('button');
   routeButton.innerHTML = 'Go!';
-  restInfo.appendChild(routeButton);
+
+  let route;
+  let routePromise =
+    createRoute(map, directionsDisplay, userPos, details.geometry.location);
+  routePromise.then((val) => {
+    route = val.route;
+
+    let distance = document.createElement('div');
+    distance.className = 'rest-distance';
+    restInfo.appendChild(distance);
+
+    let roadIcon = document.createElement('i');
+    roadIcon.className = 'fa fa-road';
+    distance.appendChild(roadIcon);
+
+    let distanceVal = document.createElement('span');
+    distanceVal.innerHTML = val.distance;
+    distance.appendChild(distanceVal);
+
+    // Append button after we got the distance
+    restInfo.appendChild(routeButton);
+  });
+
   routeButton.addEventListener('click', function () {
     clearMapAndResults(markers, directionsDisplay, false /* clearResults */);
-    createRoute(map, directionsDisplay, userPos, details.geometry.location);
+    directionsDisplay.setMap(map);
+    directionsDisplay.setDirections(route);
     markers.push(createMarker(map, details.geometry.location, details.name));
   });
+
 /*
   let restTime = document.createElement('div');
   restTime.className = 'rest-time';
@@ -383,12 +413,7 @@ function findLocationByText(map, searchText) {
   });
 }
 
-function startSearch(map, markers, directionsDisplay, userPos) {
-  let oldOptions = {
-    'distance': -1,
-    'type': -1,
-  };
-
+function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
   if (!userPos) {
     alert('Please set a poistion.');
     return;
@@ -409,11 +434,11 @@ function startSearch(map, markers, directionsDisplay, userPos) {
   // Clear markers, routes and restaurants information
   clearMapAndResults(markers, directionsDisplay);
 
+  // Wait for searching
+  startLoading();
   if (allPlaces.length < RESULTS_NUM ||
       oldOptions.distance != distanceOptions[distanceName] ||
       oldOptions.type != typeOptions[typeName]) {
-    // Wait for searching
-    startLoading();
 
     // SearchRestaurant and show results
     allPlaces = [];
@@ -433,6 +458,9 @@ function startSearch(map, markers, directionsDisplay, userPos) {
       endLoading();
     });
   } else {
+    // Fake loading to prevent OVER_QUERY_LIMIT of routes
+    setTimeout(endLoading, 500);
+
     let restaurants = recommendRestaurants(allPlaces);
     showRestaurantsDetails(map, userPos, restaurants, markers,
                            directionsDisplay);
@@ -487,8 +515,12 @@ function addButtonsEvent(map, markers, directionsDisplay) {
 
   // Register search retaurants event
   let goButton = document.getElementById('btn-go');
+  let oldOptions = {
+    'distance': -1,
+    'type': -1,
+  };
   goButton.addEventListener('click', function() {
-    startSearch(map, markers, directionsDisplay, userPos);
+    startSearch(map, markers, directionsDisplay, userPos, oldOptions);
   });
 }
 
