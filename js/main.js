@@ -1,14 +1,14 @@
-const distanceOptions = {
+const transportOptions = {
   'SELECT': -1,
-  '&lt; 500m': 500,
-  '&lt; 2000m': 2000,
-  'Arbitrary': 10000,
+  'WALK': 500,
+  'SCOOTER': 2000,
+  'CAR': 10000,
 }
 
 const typeOptions = {
   'SELECT': -1,
   'Vegan': 0,
-  'Arbitrary': 1,
+  'Random': 1,
 }
 
 // The number of retaurants' results that we show
@@ -419,9 +419,9 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
     return;
   }
 
-  let distanceName = getCustomSelectFieldName('custom-distance');
-  if (distanceOptions[distanceName] < 0) {
-    alert('Please choose a distance.')
+  let transportName = getCustomSelectFieldName('custom-transport');
+  if (transportOptions[transportName] < 0) {
+    alert('Please choose a transport.')
     return;
   }
 
@@ -437,13 +437,13 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
   // Wait for searching
   startLoading();
   if (allPlaces.length < RESULTS_NUM ||
-      oldOptions.distance != distanceOptions[distanceName] ||
+      oldOptions.distance != transportOptions[transportName] ||
       oldOptions.type != typeOptions[typeName]) {
 
     // SearchRestaurant and show results
     allPlaces = [];
     let options = {
-      'distance': distanceOptions[distanceName],
+      'distance': transportOptions[transportName],
       'type': typeOptions[typeName],
       // Do not show closed restaurants
       'openNow': true
@@ -466,7 +466,7 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
                            directionsDisplay);
   }
 
-  oldOptions.distance = distanceOptions[distanceName];
+  oldOptions.distance = transportOptions[transportName];
   oldOptions.type = typeOptions[typeName];
 }
 
