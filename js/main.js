@@ -41,7 +41,33 @@ function nextPage(isRight, idx) {
 
 function initMap() {
   let pos = {lat: 25.03, lng: 121.30};
+/*
+  var stylez = [
+      {
+        featureType: "all",
+        elementType: "all",
+        stylers: [
+          { saturation: -100 } // <-- THIS
+        ]
+      }
+  ];
 
+  var mapOptions = {
+      zoom: 11,
+      center: pos,
+      mapTypeControlOptions: {
+           mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'tehgrayz']
+      }
+  };
+
+  map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+  var mapType = new google.maps.StyledMapType(stylez, { name:"Grayscale" });
+  map.mapTypes.set('tehgrayz', mapType);
+  map.setMapTypeId('tehgrayz');
+
+  let pos = {lat: 25.03, lng: 121.30};
+*/
   let map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
     center: pos,
