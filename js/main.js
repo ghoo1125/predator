@@ -464,7 +464,8 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
   startLoading();
   if (allPlaces.length < RESULTS_NUM ||
       oldOptions.distance != transportOptions[transportName] ||
-      oldOptions.type != typeOptions[typeName]) {
+      oldOptions.type != typeOptions[typeName] ||
+      oldOptions.userPos != userPos) {
 
     // SearchRestaurant and show results
     allPlaces = [];
@@ -494,6 +495,7 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
 
   oldOptions.distance = transportOptions[transportName];
   oldOptions.type = typeOptions[typeName];
+  oldOptions.userPos = userPos;
 }
 
 function addButtonsEvent(map, markers, directionsDisplay) {
@@ -544,6 +546,7 @@ function addButtonsEvent(map, markers, directionsDisplay) {
   let oldOptions = {
     'distance': -1,
     'type': -1,
+    'userPos': {},
   };
   goButton.addEventListener('click', function() {
     startSearch(map, markers, directionsDisplay, userPos, oldOptions);
