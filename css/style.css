@@ -135,16 +135,25 @@ select {
   opacity: 0.8;
 }
 
+.place {
+  margin: 0 auto;
+  width: 90%;
+  border-radius: 5px;
+  border: 1px solid #999;
+}
+
 #place-search {
-  width: 50%;
+  width: 80%;
 }
 
 #place-button {
-  width: 10%;
+  width: 15%;
 }
 
 #current-button {
-  width: 20%;
+  display: block;
+  margin: 5px auto;
+  width: 70%;
 }
 
 #btn-go {
