@@ -529,6 +529,7 @@ function addButtonsEvent(map, markers, directionsDisplay) {
   let currentButton = document.getElementById('current-button');
   currentButton.addEventListener('click', function() {
     if (navigator.geolocation) {
+      document.getElementById('place-search').value = "";
       navigator.geolocation.getCurrentPosition(function(curPos) {
         // Set to current position
         userPos = {lat: curPos.coords.latitude, lng: curPos.coords.longitude};
