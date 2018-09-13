@@ -66,6 +66,7 @@ select {
 .selects {
   top: 20vh;
   position: relative;
+  text-align: center;
 }
 
 .custom-select {
@@ -135,8 +136,24 @@ select {
   opacity: 0.8;
 }
 
+#open-now {
+  display: inline-block;
+  margin: 20px auto;
+  border-radius: 5px;
+  border: 1px solid #999;
+  padding: 5px;
+}
+
+#open-now p {
+  display: inline;
+  color: #777;
+  font-size: 10pt;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
 .place {
-  margin: 0 auto;
+  margin: 20px auto;
   width: 90%;
   border-radius: 5px;
   border: 1px solid #999;

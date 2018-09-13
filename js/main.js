@@ -155,12 +155,12 @@ Store the queried restaurants globally since we might asynchronously push and
 pop the restaurants. Noted that we can only query at most 60 restaurants.
 */
 let allPlaces = [];
-function searchRestaurant(map, pos, options) {
+function searchRestaurant(map, options) {
   let infoWindow = new google.maps.InfoWindow({map: map});
   let placesService = new google.maps.places.PlacesService(map);
 
   let request = {
-    location: pos,
+    location: options.userPos,
     radius: options.distance, /* maximum 50,000 meter */
     type: 'restaurant',
     openNow: options.openNow,
@@ -188,7 +188,7 @@ function searchRestaurant(map, pos, options) {
 }
 
 function createRestaurantBlock(map, userPos, details, markers,
-                               directionsDisplay, idx) {
+                               openNow, directionsDisplay, idx) {
   let rest = document.createElement('div');
   rest.className = 'rest';
 
@@ -325,52 +325,53 @@ function createRestaurantBlock(map, userPos, details, markers,
     markers.push(createMarker(map, details.geometry.location, details.name));
   });
 
-/*
-  let restTime = document.createElement('div');
-  restTime.className = 'rest-time';
-  restInfo.appendChild(restTime);
+  if (!openNow) {
+    let restTime = document.createElement('div');
+    restTime.className = 'rest-time';
+    restInfo.appendChild(restTime);
 
-  let dropdown = document.createElement('div');
-  dropdown.className = 'dropdown';
-  restTime.appendChild(dropdown);
+    let dropdown = document.createElement('div');
+    dropdown.className = 'dropdown';
+    restTime.appendChild(dropdown);
 
-  let timeIcon = document.createElement('i');
-  timeIcon.className = 'fa fa-clock-o';
-  dropdown.appendChild(timeIcon);
+    let timeIcon = document.createElement('i');
+    timeIcon.className = 'fa fa-clock-o';
+    dropdown.appendChild(timeIcon);
 
-  let dropButton = document.createElement('span');
-  dropButton.className = 'drop-btn';
-  if (details.hasOwnProperty('opening_hours') &&
-      details.opening_hours.hasOwnProperty('open_now')) {
-    dropButton.innerHTML = details.opening_hours.open_now ? '營業中' : '休息中';
-  } else {
-    dropButton.innerHTML = '營業時間';
-  }
-  dropdown.appendChild(dropButton);
+    let dropButton = document.createElement('span');
+    dropButton.className = 'drop-btn';
+    if (details.hasOwnProperty('opening_hours') &&
+        details.opening_hours.hasOwnProperty('open_now')) {
+      dropButton.innerHTML = details.opening_hours.open_now ? '營業中' : '休息中';
+    } else {
+      dropButton.innerHTML = '營業時間';
+    }
+    dropdown.appendChild(dropButton);
 
-  let content = document.createElement('ul');
-  content.className = 'dropdown-content';
-  dropdown.appendChild(content);
+    let content = document.createElement('ul');
+    content.className = 'dropdown-content';
+    dropdown.appendChild(content);
 
-  let list;
-  if (details.hasOwnProperty('opening_hours') &&
-      details.opening_hours.hasOwnProperty('weekday_text')) {
-    for (let i = 0; i < details.opening_hours.weekday_text.length; i++) {
+    let list;
+    if (details.hasOwnProperty('opening_hours') &&
+        details.opening_hours.hasOwnProperty('weekday_text')) {
+      for (let i = 0; i < details.opening_hours.weekday_text.length; i++) {
+        list = document.createElement('li');
+        list.innerHTML = details.opening_hours.weekday_text[i];
+        content.appendChild(list);
+      }
+    } else {
       list = document.createElement('li');
-      list.innerHTML = details.opening_hours.weekday_text[i];
+      list.innerHTML = '很抱歉，查無營業時間。';
       content.appendChild(list);
     }
-  } else {
-    list = document.createElement('li');
-    list.innerHTML = '很抱歉，查無營業時間。';
-    content.appendChild(list);
   }
-*/
+
   return rest;
 }
 
 function showRestaurantsDetails(map, userPos, places, markers,
-                                directionsDisplay) {
+                                openNow, directionsDisplay) {
   let placesService = new google.maps.places.PlacesService(map);
   let results = document.getElementById('rest-results');
 
@@ -384,7 +385,7 @@ function showRestaurantsDetails(map, userPos, places, markers,
         if (status == google.maps.places.PlacesServiceStatus.OK) {
           results.appendChild(
             createRestaurantBlock(map, userPos, details, markers,
-                                  directionsDisplay, i));
+                                  openNow, directionsDisplay, i));
           resolve();
         } else {
           alert('Get restaurant details failed: ' + status);
@@ -457,6 +458,8 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
     return;
   }
 
+  let openNow = document.getElementById("open-now-value").checked;
+
   // Clear markers, routes and restaurants information
   clearMapAndResults(markers, directionsDisplay);
 
@@ -465,21 +468,22 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
   if (allPlaces.length < RESULTS_NUM ||
       oldOptions.distance != transportOptions[transportName] ||
       oldOptions.type != typeOptions[typeName] ||
-      oldOptions.userPos != userPos) {
+      oldOptions.userPos != userPos ||
+      oldOptions.openNow != openNow) {
 
     // SearchRestaurant and show results
     allPlaces = [];
     let options = {
       'distance': transportOptions[transportName],
       'type': typeOptions[typeName],
-      // Do not show closed restaurants
-      'openNow': true
+      'userPos': userPos,
+      'openNow': openNow,
     };
-    let searchPromise = searchRestaurant(map, userPos, options);
+    let searchPromise = searchRestaurant(map, options);
     searchPromise.then(() => {
       let restaurants = recommendRestaurants(allPlaces);
       showRestaurantsDetails(map, userPos, restaurants, markers,
-                             directionsDisplay);
+                             openNow, directionsDisplay);
 
       // Finish searching
       endLoading();
@@ -490,12 +494,13 @@ function startSearch(map, markers, directionsDisplay, userPos, oldOptions) {
 
     let restaurants = recommendRestaurants(allPlaces);
     showRestaurantsDetails(map, userPos, restaurants, markers,
-                           directionsDisplay);
+                           openNow, directionsDisplay);
   }
 
   oldOptions.distance = transportOptions[transportName];
   oldOptions.type = typeOptions[typeName];
   oldOptions.userPos = userPos;
+  oldOptions.openNow = openNow;
 }
 
 function addButtonsEvent(map, markers, directionsDisplay) {
@@ -547,6 +552,7 @@ function addButtonsEvent(map, markers, directionsDisplay) {
     'distance': -1,
     'type': -1,
     'userPos': {},
+    'openNow': true,
   };
   goButton.addEventListener('click', function() {
     startSearch(map, markers, directionsDisplay, userPos, oldOptions);
